@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="view-entitlement-flow" doc:id="588218eb-9b81-475c-8c57-c5cd35b0c727" >
+		<logger level="INFO" doc:name="Log before view entitlement call" doc:id="0a169222-1fe2-4fe8-828c-a694eda5af69" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "View Entitlement -System - Before DB call -Flow Start", "resourceName": #[attributes.queryParams.resource], "roleName":#[attributes.queryParams.role]. "conditionType":#[attributes.headers.condition_type], "conditionValue": #[attributes.headers.condition_value],"payload":#[payload] }'/>
+		<db:select doc:name="query entitlement database" doc:id="6c07b0fe-8b94-41f1-b6d0-c3ae342b2785" config-ref="Database_Config" queryTimeout="${mysql.querytimeout}">
+			<db:sql >select ro.role_name,ro.role_id, ro.action_name, en.resource_name,en.resource_id, co.condition_type, co.condition_value from
+role_f ro, condition_d co, entitlement_d en 
+where
+ro.role_id=en.role_id and ro.condition_id= co.condition_id and 
+ro.role_name=:role and 
+co.condition_value=:cvalue and co.condition_type=:ctype and
+en.resource_name=:resource</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'resource':attributes.queryParams.resource,
+	'role':attributes.queryParams.role,
+	'ctype':attributes.headers.condition_type,
+	'cvalue':attributes.headers.condition_value
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="object to json" doc:id="be449a57-5fbb-42b1-9b43-c49ed9abb0af" >
+			<ee:message >
+				<ee:set-payload resource="dwl/viewEntitlement/entitlement-response.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="log after view entitlement call" doc:id="bf1a0e4e-089b-4dba-adc9-30fa5fc80828" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "View Entitlement -System- After DB call- Flow End", "payload":#[payload] }'/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a042bdef-22bc-4c79-97ec-e987c1bda59c" >
+				<ee:transform doc:name="Transform Message" doc:id="56210c90-6d24-40e5-8717-2afa5edbb5cc" >
+					<ee:message >
+						<ee:set-payload resource="dwl/viewEntitlement/error-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/viewEntitlement/error-status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="select-entitlement" doc:id="a5a57149-005c-4f19-83ea-c388ecd521bc" >
+		<db:select doc:name="Select" doc:id="4413124d-f399-4327-8908-e74a5ccdb7e8" config-ref="Database_Config" queryTimeout="${mysql.querytimeout}">
+			<db:sql >select en.resource_name,en.resource_id from entitlement_d en where en.resource_name=:resource</db:sql>
+			<db:input-parameters ><![CDATA[#[{'resource':attributes.queryParams.resource}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="32e75425-05d3-4c2f-95ca-0b903e89711e" >
+			<ee:message >
+				<ee:set-payload resource="dwl/viewEntitlement/select-entitlement.dwl" />
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9583c665-a706-481f-a953-b50faabb419c" message="entitlement payload is #[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5cf49630-6bcd-4e84-a079-262cb454174e" >
+				<ee:transform doc:name="Transform Message" doc:id="1d9d91cb-5fe3-4fc5-9d54-eb72fcb1094b" >
+					<ee:message >
+						<ee:set-payload resource="dwl/viewEntitlement/error-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/viewEntitlement/error-status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="select-condition" doc:id="aab4f035-1df5-499d-8c20-1a9224c7ea58" >
+		<db:select doc:name="Select" doc:id="dc237d2f-4cfc-460a-b606-d92fabc8a5b2" config-ref="Database_Config" queryTimeout="${mysql.querytimeout}">
+			<db:sql >select  co.condition_type, co.condition_value from condition_d co where co.condition_value=:cvalue and co.condition_type=:ctype</db:sql>
+			<db:input-parameters ><![CDATA[#[{'ctype':attributes.headers.condition_type,
+	'cvalue':attributes.headers.condition_value}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="1fb56474-bb54-4c63-b4f4-a766656a0a4d" >
+			<ee:message >
+				<ee:set-payload resource="dwl/viewEntitlement/select-condition.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="df3362e6-e5e2-4a02-bd81-132d690ba2da" message="condition payload is #[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5b39e2af-25a8-4679-a931-0940abf6fa04" >
+				<ee:transform doc:name="Transform Message" doc:id="5b491946-517f-4fb7-af77-480866d60d73" >
+					<ee:message >
+						<ee:set-payload resource="dwl/viewEntitlement/error-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/viewEntitlement/error-status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="select-role" doc:id="eb845d74-98c7-4b06-87b1-41de887580ca" >
+		<db:select doc:name="Select" doc:id="cd710807-163c-40fb-9492-1c5d819680fd" config-ref="Database_Config" queryTimeout="${mysql.querytimeout}">
+			<db:sql >select ro.role_name,ro.role_id, ro.action_name from role_f ro where ro.role_name=:role</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'role':attributes.queryParams.role
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="31e87a49-96c9-4ac6-8a6b-bab93b8faddf" >
+			<ee:message >
+				<ee:set-payload resource="dwl/viewEntitlement/select-role.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="73940211-9efc-4e83-8de7-a001a820664f" message="role payload is #[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e8eb8388-54b4-4ade-83a5-a333b8e66d44" >
+				<ee:transform doc:name="Transform Message" doc:id="3861759f-0b35-48fc-83d9-f384127adf23" >
+					<ee:message >
+						<ee:set-payload resource="dwl/viewEntitlement/error-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/viewEntitlement/error-status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

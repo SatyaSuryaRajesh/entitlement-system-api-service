@@ -1,0 +1,13 @@
+{
+  "role": "sysadmin",
+  "resource": "onboarding",
+  "condition": {
+    "Country": "India"
+  },
+  "action": [
+    "api_read",
+    "api_write",
+    "api_update",
+    "api_upload"
+  ]
+}

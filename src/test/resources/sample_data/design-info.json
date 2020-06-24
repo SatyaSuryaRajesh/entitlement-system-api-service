@@ -1,0 +1,31 @@
+{
+  "sampleData": {
+    "26e3eae5-3ab9-4c87-8631-ad7d459abd67": {
+      "payload": "sample_data/unknown.dwl"
+    },
+    "5ea06cae-0bfd-48f7-9746-077174982d30": {
+      "payload": "sample_data/unknown_2.dwl"
+    },
+    "06b062d1-950d-42a3-9e75-9c2f3a5f79f5": {
+      "payload": "sample_data/unknown_4.dwl"
+    },
+    "b5851a82-6108-4549-9788-12fdbfa65f65": {
+      "payload": "sample_data/unknown_1.dwl"
+    },
+    "ab739e43-7eca-497c-b57f-60ab07ed9db9": {
+      "payload": "sample_data/unknown_3.dwl"
+    },
+    "be449a57-5fbb-42b1-9b43-c49ed9abb0af": {
+      "payload": "sample_data/list_object.dwl"
+    },
+    "32e75425-05d3-4c2f-95ca-0b903e89711e": {
+      "payload": "sample_data/list_object_1.dwl"
+    },
+    "1fb56474-bb54-4c63-b4f4-a766656a0a4d": {
+      "payload": "sample_data/list_object_2.dwl"
+    },
+    "31e87a49-96c9-4ac6-8a6b-bab93b8faddf": {
+      "payload": "sample_data/list_object_3.dwl"
+    }
+  }
+}

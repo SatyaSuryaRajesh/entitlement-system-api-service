@@ -1,0 +1,118 @@
+#%RAML 1.0
+title: entitlement-db-sys
+version: 1.0
+baseUri: capgemini-db
+
+/read:
+  get:
+    queryParameters:
+      role:
+        required: false
+      resource:
+        required: false
+    headers:
+      condition_type:
+        required: false
+      condition_value:
+        required: false
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/entitlement-get-response.json
+
+/query:
+  /entitlement:
+    get:
+      queryParameters:
+        role:
+          required: false
+        resource:
+          required: false
+      headers:
+        condition_type:
+          required: false
+        condition_value:
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/query-get-entitlement.json
+  /condition:
+    get:
+      queryParameters:
+        role:
+          required: false
+        resource:
+          required: false
+      headers:
+        condition_type:
+          required: false
+        condition_value:
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/query-get-condition.json
+  /role:
+    get:
+      queryParameters:
+        role:
+          required: false
+        resource:
+          required: false
+      headers:
+        condition_type:
+          required: false
+        condition_value:
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/query-get-role.json
+/create:
+  /entitlement:
+    post:
+      displayName: Create Entitlement
+      description: To create new entitlement.
+      body:
+        application/json:
+          example: !include examples/entitlement-create-request.json
+      responses:
+        201:
+          body:
+            application/json:
+              example: !include examples/create-entitlement-response.json
+                
+              
+
+  /role:
+    post:    
+      displayName: Create Role
+      description: To create new role.
+      body:
+        application/json:
+          example: !include examples/entitlement-create-request.json
+      responses:
+        201:
+          body:
+            application/json:
+              example: !include examples/create-role-response.json
+  /condition:
+    post:   
+      displayName: Create Conditon
+      description: To create new condition.
+      body:
+        application/json:
+          example: !include examples/entitlement-create-request.json
+      responses:
+        201:
+          body:
+            application/json:
+              example: !include examples/create-condition-response.json
+      
+    
+

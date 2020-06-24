@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="create-entitlement-flow" doc:id="ca955fca-c012-41fd-bfe7-bc6bd49f2020" >
+		<logger level="INFO" doc:name="Log request for Create Entitlement" doc:id="961924f5-b0bd-4915-bb86-1984104a2a99" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement -System- Flow Start", "payload": #[payload] }'/>
+		<ee:transform doc:name="Transform Message" doc:id="7ef66cb9-fc75-4746-8690-a5d702431f82" >
+			<ee:message >
+				<ee:set-payload resource="dwl/createEntitlement/request-create-entitlement.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log request before DB insertion" doc:id="c28a7c36-70a4-4be5-b57b-62c31e9e0edc" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - System - Before DB Insertion", "payload": #[payload] }'/>
+		<db:insert doc:name="create-entitlement" doc:id="850b6888-8a91-4f1e-bfb7-5367d622a8ce" config-ref="Database_Config" queryTimeout="${mysql.querytimeout}">
+			<db:sql >insert into entitlement_d (entitlement_id, resource_id, resource_name, role_id) values (:entid, :resid, :resnm,:roid);</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'entid':payload.entitlement.entitlement_id,
+	'resid':payload.entitlement.resource_id,
+	'resnm':payload.entitlement.resource_name,
+	'roid':payload.entitlement.role_id,
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Log response after DB insertion" doc:id="ad2432c7-5f36-461f-89c9-3ffff311b664" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement -System- After DB Insertion", "payload": #[payload] }'/>
+		<set-variable value="#[payload.affectedRows]" doc:name="Set Variable" doc:id="3c623d34-bb2d-4430-8606-6d6899b52fba" variableName="status"/>
+		<choice doc:name="Choice" doc:id="c278b089-29f0-4a3f-9c78-eb43fab857af" >
+			<when expression="#[vars.status == 1]">
+				<ee:transform doc:name="Transform Message" doc:id="d4760c98-fbdc-418c-9f1f-1a907ca588b5" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/success-entitlement.dwl" />
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="0557958f-74d3-4810-8a62-6961530d787e" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/failed-entitlement.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/400-status.dwl" variableName="httpStatus" />
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Log response with final contract" doc:id="d8e71dbd-f60e-470a-ab26-fac100b87f17" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Entitlement - System - Flow End - Final Contract", "payload": #[payload] }'/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8d143b24-b63e-48b1-9594-49e2046bb638" >
+				<ee:transform doc:name="Transform Message" doc:id="8a8e9379-b382-406f-b5e5-300668deb886" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/error-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/error-status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="create-role-flow" doc:id="50fd3854-25bf-402b-997e-f8057c42a860" >
+		<logger level="INFO" doc:name="Log request for Create Role" doc:id="d1abbfe2-7b01-4ae4-ba24-6bc46b441926" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Role -System- Flow Start", "payload": #[payload] }'/>
+		<ee:transform doc:name="Transform Message" doc:id="d429cdbb-62bc-4b00-b1fa-82c4db374e25" >
+			<ee:message >
+				<ee:set-payload resource="dwl/createEntitlement/request-create-role.dwl" />
+			
+</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log request before DB insertion" doc:id="fc1aeeda-7dcc-4a5c-9c45-ff737f990596" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Role -System- Before DB Insertion", "payload": #[payload] }'/>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="21805205-7db9-4026-87b1-ce0f449fe192" config-ref="Database_Config" queryTimeout="${mysql.querytimeout}">
+			<db:sql >insert into role_f (role_name, role_id, condition_id, action_id, action_name) values (:role_name, :role_id, :condition_id, :action_id, :action_name);</db:sql>
+		</db:bulk-insert>
+		<logger level="INFO" doc:name="Log response after DB insertion" doc:id="84f92990-46e4-4c8f-868c-41fa7b57391f" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Role -System- After DB Insertion", "payload": #[payload] }'/>
+		<ee:transform doc:name="Transform Message" doc:id="741f8a04-916b-452a-8434-6ee7a4ad2746" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="dwl/createEntitlement/var-condition.dwl" variableName="condition" />
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="dc219940-a688-428c-b081-5fd46fb3fa14" >
+			<when expression="#[vars.condition == true]">
+				<ee:transform doc:name="Transform Message" doc:id="4a19e56d-d32c-4d3c-9ffd-7f5f104a0f81" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/success-role.dwl" />
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="d54562a3-09c8-4419-ada8-917ae5ac6039" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/failed-role.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/400-status.dwl" variableName="httpStatus" />
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Log response with final contract" doc:id="9a83b106-bdc0-4148-8604-0436a47e8370" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Role -System- Flow End - Final Contract", "payload": #[payload] }'/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="8e80bd44-a89e-45ba-9b96-6e91f1e479a0" >
+				<ee:transform doc:name="Transform Message" doc:id="3fb7b8de-2ce0-40ba-8851-9cb264aa8f7d" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/error-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/error-status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="create-condition-flow" doc:id="defff274-e40c-47ee-b7c1-b09c23c379f3" >
+		<logger level="INFO" doc:name="Log request for Create Condition" doc:id="4ff2086c-eb88-42d4-9041-27d444faa4ab" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Condition -System- Flow Start", "payload": #[payload] }'/>
+		<ee:transform doc:name="Transform Message" doc:id="5ea06cae-0bfd-48f7-9746-077174982d30" >
+			<ee:message >
+				<ee:set-payload resource="dwl/createEntitlement/request-condition-role.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Log request before DB insertion" doc:id="1c03abe2-47e4-4f5c-8612-d43b9a94a7c1" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Condition -System- Before DB Insertion", "payload": #[payload] }'/>
+		<db:insert doc:name="Insert" doc:id="f004fe68-f421-41a2-950d-de574ed982ee" config-ref="Database_Config" queryTimeout="${mysql.querytimeout}">
+			<db:sql >insert into condition_d (condition_id, condition_type, condition_value) values (:cid,:ctype,:cvalue);</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'cid':payload.condition.condition_id,
+	'ctype':payload.condition.condition_type,
+	'cvalue':payload.condition.condition_value
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Log response after DB insertion" doc:id="0b542136-cf10-46c6-b497-a9bf2ad373ba" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Condition -System- After DB Insertion", "payload": #[payload] }'/>
+		<set-variable value="#[payload.affectedRows]" doc:name="Set Variable" doc:id="910bcede-3eb7-4366-96f6-f0d302bc90a9" variableName="status"/>
+		<choice doc:name="Choice" doc:id="9b43b9c5-f18f-43c9-afbe-07cfec23725c" >
+			<when expression="#[vars.status == 1]">
+				<ee:transform doc:name="Transform Message" doc:id="4ddbece0-1285-44ce-9fd1-079f3f8a892d" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/success-condition.dwl" />
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="658edb59-547d-4fd4-85be-a34f4eb90dcd" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/failed-condition.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/400-status.dwl" variableName="httpStatus" />
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Log response with final contract" doc:id="2ae18c92-d609-436f-8399-e076b0b9b4cf" message='{ "correlationId" : #[correlationId],"ExecutionPoint" : "Create Condition -System- Flow End - Final Contract", "payload": #[payload] }'/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="fffd90d6-736e-40fb-bb64-cea93d4ca392" >
+				<ee:transform doc:name="Transform Message" doc:id="06d06f6d-cb3c-44f6-ad07-e4cec813a5e5" >
+					<ee:message >
+						<ee:set-payload resource="dwl/createEntitlement/error-response.dwl" />
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable resource="dwl/createEntitlement/error-status.dwl" variableName="http.status" />
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
